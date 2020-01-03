@@ -27,7 +27,12 @@ const QUESTIONS = [
       if (/^([A-Za-z\-\_\d])+$/.test(input)) return true;
       else return 'Project name may only include letters, numbers, underscores and hashes.';
     },
-
+  },
+  {
+    name: 'author',
+    type: 'input',
+    message: 'Project author:',
+    when: () => !yargs.argv['author'],
   }
 ];
 
@@ -40,6 +45,7 @@ export interface TemplateConfig {
 
 export interface CliOptions {
   projectName: string
+  projectAuthor: string
   templateName: string
   templatePath: string
   tartgetPath: string
@@ -53,12 +59,14 @@ inquirer.prompt(QUESTIONS)
 
     const projectChoice = answersNew['template'];
     const projectName = answersNew['name'];
+    const projectAuthor = answersNew['author'];
     const templatePath = path.join(__dirname, 'templates', projectChoice);
     const tartgetPath = path.join(CURR_DIR, projectName);
     const templateConfig = getTemplateConfig(templatePath);
 
     const options: CliOptions = {
       projectName,
+      projectAuthor,
       templateName: projectChoice,
       templatePath,
       tartgetPath,
@@ -69,7 +77,7 @@ inquirer.prompt(QUESTIONS)
       return;
     }
 
-    createDirectoryContents(templatePath, projectName, templateConfig);
+    createDirectoryContents(templatePath, projectName, projectAuthor, templateConfig);
 
     if (!postProcess(options)) {
       return;
@@ -127,6 +135,12 @@ function postProcess(options: CliOptions) {
     });
   }
 
+  //Initilialize git
+  if (shell.which('git')) {
+    shell.cd(options.tartgetPath);
+    shell.exec('git init');
+  }
+
   if (isNode(options)) {
     return postProcessNode(options);
   }
@@ -167,7 +181,7 @@ function postProcessNode(options: CliOptions) {
 
 const SKIP_FILES = ['node_modules', '.template.json'];
 
-function createDirectoryContents(templatePath: string, projectName: string, config: TemplateConfig) {
+function createDirectoryContents(templatePath: string, projectName: string, projectAuthor: string, config: TemplateConfig) {
   const filesToCreate = fs.readdirSync(templatePath);
 
   filesToCreate.forEach(file => {
@@ -180,7 +194,7 @@ function createDirectoryContents(templatePath: string, projectName: string, conf
 
     if (stats.isFile()) {
       let contents = fs.readFileSync(origFilePath, 'utf8');
-      contents = template.render(contents, { projectName });
+      contents = template.render(contents, { projectName, projectAuthor });
 
       const writePath = path.join(CURR_DIR, projectName, file);
       fs.writeFileSync(writePath, contents, 'utf8');
@@ -189,7 +203,7 @@ function createDirectoryContents(templatePath: string, projectName: string, conf
       fs.mkdirSync(path.join(CURR_DIR, projectName, file));
 
       // recursive call
-      createDirectoryContents(path.join(templatePath, file), path.join(projectName, file), config);
+      createDirectoryContents(path.join(templatePath, file), path.join(projectName, file), projectAuthor, config);
     }
   });
 
