@@ -6,6 +6,8 @@ import * as path from 'path';
 import * as shell from 'shelljs';
 import * as template from './utils/template';
 import chalk from 'chalk';
+import * as figlet from 'figlet';
+
 import * as yargs from 'yargs';
 
 const CHOICES = fs.readdirSync(path.join(__dirname, 'templates'));
@@ -51,6 +53,8 @@ export interface CliOptions {
   tartgetPath: string
   config: TemplateConfig
 }
+
+console.log(chalk.hex('#0066cc').bold(figlet.textSync('TYPECLI')));
 
 inquirer.prompt(QUESTIONS)
   .then(answers => {

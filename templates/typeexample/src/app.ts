@@ -1,12 +1,13 @@
-import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import helmet from "helmet";
-import { Routes } from "./config/routes";
-import { sequelizeInit, database } from "./config/database";
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import helmet from 'helmet';
+import { Routes } from './config/routes';
+import { databaseGenerate } from './config/database';
 
 class App {
   public app: express.Application;
+
   public routes: Routes = new Routes();
 
   constructor() {
@@ -21,7 +22,7 @@ class App {
     this.app.use(cors());
     this.app.use(helmet());
     this.app.use(bodyParser());
-    sequelizeInit();
+    databaseGenerate();
   }
 }
 
